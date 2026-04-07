@@ -15,7 +15,7 @@ logging.basicConfig(
     format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
     datefmt="%Y-%m-%d %H:%M:%S",
 )
-logger = logging.getLogger("team-bot")
+logger = logging.getLogger("biohack-bot")
 
 # ---------------------------------------------------------------------------
 # Configuration
@@ -23,25 +23,31 @@ logger = logging.getLogger("team-bot")
 TOKEN = os.getenv("DISCORD_BOT_TOKEN", "YOUR_BOT_TOKEN_HERE")
 GUILD_ID = int(os.getenv("DISCORD_GUILD_ID", "0"))
 
+WEBSITE_BEST = "https://bestpeptides.club"
+WEBSITE_WARS = "https://peptidewars.com"
+
 CHANNELS = {
-    "standup": "daily-standup",
+    "general": "general-chat",
     "announcements": "announcements",
     "welcome_log": "welcome-log",
     "audit_log": "audit-log",
     "bot_commands": "bot-commands",
     "welcome": "welcome",
+    "peptide_general": "peptide-general",
+    "deals": "deals-and-discounts",
 }
 
 # ---------------------------------------------------------------------------
 # Branding constants
 # ---------------------------------------------------------------------------
-BRAND_COLOR = 0x2B6CB0       # Primary blue
-BRAND_ACCENT = 0x38A169      # Green accent (success / welcome)
-BRAND_WARN = 0xE67E22        # Orange (tickets, warnings)
-BRAND_ANNOUNCE = 0xE53E3E    # Red (announcements)
-BRAND_POLL = 0x805AD5        # Purple (polls)
-BRAND_MEETING = 0x319795     # Teal (meetings)
-BRAND_FOOTER = "Team Bot"
+BRAND_COLOR = 0x0D9488       # Teal — primary
+BRAND_ACCENT = 0x22C55E      # Green — welcome / success
+BRAND_WARN = 0xF59E0B        # Amber — tickets / warnings
+BRAND_ANNOUNCE = 0xEF4444    # Red — announcements
+BRAND_POLL = 0x8B5CF6        # Violet — polls
+BRAND_INFO = 0x3B82F6        # Blue — info / resources
+BRAND_PEPTIDE = 0x06B6D4     # Cyan — peptide-specific
+BRAND_FOOTER = "bestpeptides.club | peptidewars.com"
 BRAND_ICON = None  # Set a URL string here to add a footer icon
 
 # ---------------------------------------------------------------------------
@@ -109,16 +115,16 @@ async def on_ready():
     except Exception:
         logger.exception("Failed to sync slash commands")
 
-    # Start standup reminder loop
-    if not standup_reminder.is_running():
-        standup_reminder.start()
+    # Start daily check-in loop
+    if not daily_checkin.is_running():
+        daily_checkin.start()
 
 
 @bot.event
 async def on_member_join(member: discord.Member):
     try:
-        # Auto-assign Team Member role
-        role = discord.utils.get(member.guild.roles, name="Team Member")
+        # Auto-assign Member role
+        role = discord.utils.get(member.guild.roles, name="Member")
         if role:
             await member.add_roles(role)
 
@@ -128,11 +134,14 @@ async def on_member_join(member: discord.Member):
             embed = branded_embed(
                 title=f"Welcome, {member.display_name}!",
                 description=(
-                    f"Hey {member.mention}, welcome to **{member.guild.name}**!\n\n"
-                    "1. Read **#rules-and-guidelines**\n"
-                    "2. Introduce yourself in **#introductions**\n"
-                    "3. Check **#docs-and-links** for resources\n"
-                    "4. Join **#daily-standup** to stay in sync"
+                    f"Hey {member.mention}, welcome to the **{member.guild.name}**!\n\n"
+                    "1. Read **#rules** before posting\n"
+                    "2. Introduce yourself in **#introductions** \u2014 what are you optimizing?\n"
+                    "3. Browse **#guides-and-wikis** if you're new to peptides\n"
+                    "4. Check out our sites:\n"
+                    f"   \u2022 [{WEBSITE_BEST}]({WEBSITE_BEST})\n"
+                    f"   \u2022 [{WEBSITE_WARS}]({WEBSITE_WARS})\n\n"
+                    "Jump into **#peptide-general** or **#general-chat** and say hi!"
                 ),
                 color=BRAND_ACCENT,
                 author=member,
@@ -165,32 +174,33 @@ async def on_member_remove(member: discord.Member):
 # ===================================================================
 
 @tasks.loop(time=time(hour=14, minute=0))
-async def standup_reminder():
+async def daily_checkin():
+    """Daily community check-in posted to #general-chat on weekdays."""
     today = datetime.utcnow()
     if today.weekday() >= 5:  # Skip weekends
         return
-    ch = get_channel("standup")
+    ch = get_channel("general")
     if not ch:
         return
 
     try:
         embed = branded_embed(
-            title=f"Daily Standup \u2014 {today.strftime('%A, %B %d')}",
+            title=f"Daily Check-In \u2014 {today.strftime('%A, %B %d')}",
             description=(
-                "Reply in the thread:\n\n"
-                "**Yesterday:** What did you accomplish?\n"
-                "**Today:** What are you working on?\n"
-                "**Blockers:** Anything in your way?"
+                "Drop your update in the thread:\n\n"
+                "**Protocol:** What are you currently running?\n"
+                "**Progress:** Any changes or results?\n"
+                "**Questions:** Anything you need help with?"
             ),
         )
         msg = await ch.send(embed=embed)
         await msg.create_thread(
-            name=f"Standup {today.strftime('%m/%d')}",
+            name=f"Check-In {today.strftime('%m/%d')}",
             auto_archive_duration=1440,
         )
-        logger.info("Standup reminder posted")
+        logger.info("Daily check-in posted")
     except Exception:
-        logger.exception("Failed to post standup reminder")
+        logger.exception("Failed to post daily check-in")
 
 
 # ===================================================================
@@ -204,11 +214,12 @@ async def help_command(interaction: discord.Interaction):
     commands_info = [
         ("`/help`", "Show this help message"),
         ("`/setup_server`", "Auto-create channels & roles from template *(Admin)*"),
-        ("`/ticket`", "Create a support or request ticket"),
+        ("`/ticket`", "Open a question or support thread"),
         ("`/poll`", "Create a quick poll with 2\u20134 options"),
-        ("`/meeting`", "Start a meeting-notes thread"),
-        ("`/department`", "Set your department role"),
-        ("`/announce`", "Post an announcement *(Manager+)*"),
+        ("`/log`", "Log a peptide or supplement protocol"),
+        ("`/links`", "Get links to our websites and resources"),
+        ("`/interest`", "Set your interest-area role"),
+        ("`/announce`", "Post an announcement *(Moderator+)*"),
     ]
     desc = "\n".join(f"{cmd} \u2014 {info}" for cmd, info in commands_info)
     embed = branded_embed(
@@ -218,27 +229,53 @@ async def help_command(interaction: discord.Interaction):
     embed.add_field(
         name="Automatic features",
         value=(
-            "- **Daily standup** reminders (weekdays at 2 PM UTC)\n"
-            "- **Auto-onboarding** \u2014 new members get the Team Member role and a welcome message"
+            "- **Daily check-in** thread (weekdays at 2 PM UTC)\n"
+            "- **Auto-onboarding** \u2014 new members get the Member role and a welcome message"
         ),
         inline=False,
+    )
+    embed.add_field(
+        name="Our sites",
+        value=f"[bestpeptides.club]({WEBSITE_BEST}) | [peptidewars.com]({WEBSITE_WARS})",
+        inline=False,
+    )
+    await interaction.response.send_message(embed=embed, ephemeral=True)
+
+
+# ---- /links -------------------------------------------------------
+
+@bot.tree.command(name="links", description="Get links to our websites and resources")
+async def links(interaction: discord.Interaction):
+    embed = branded_embed(
+        title="Resources & Links",
+        description=(
+            f"**Best Peptides Club** \u2014 [{WEBSITE_BEST}]({WEBSITE_BEST})\n"
+            f"**Peptide Wars** \u2014 [{WEBSITE_WARS}]({WEBSITE_WARS})\n\n"
+            "**Community channels:**\n"
+            "\u2022 **#peptide-general** \u2014 Open discussion\n"
+            "\u2022 **#peptide-logs** \u2014 Share your protocols and results\n"
+            "\u2022 **#sourcing-and-testing** \u2014 Vendors, COAs, and testing\n"
+            "\u2022 **#research-and-studies** \u2014 PubMed links and papers\n"
+            "\u2022 **#deals-and-discounts** \u2014 Sales and coupon codes"
+        ),
+        color=BRAND_INFO,
     )
     await interaction.response.send_message(embed=embed, ephemeral=True)
 
 
 # ---- /ticket ------------------------------------------------------
 
-@bot.tree.command(name="ticket", description="Create a support/request ticket")
+@bot.tree.command(name="ticket", description="Open a question or support thread")
 @app_commands.describe(
-    category="Ticket category",
+    category="Topic area",
     title="Brief title",
-    description="Detailed description",
+    description="Details or question",
 )
 @app_commands.choices(category=[
-    app_commands.Choice(name="IT / Access Request", value="it"),
-    app_commands.Choice(name="HR / People", value="hr"),
-    app_commands.Choice(name="Bug Report", value="bug"),
-    app_commands.Choice(name="Feature Request", value="feature"),
+    app_commands.Choice(name="Peptides", value="peptides"),
+    app_commands.Choice(name="Supplements / Nootropics", value="supps"),
+    app_commands.Choice(name="Bloodwork / Labs", value="labs"),
+    app_commands.Choice(name="Side Effects / Safety", value="safety"),
     app_commands.Choice(name="General", value="general"),
 ])
 async def ticket(
@@ -248,18 +285,23 @@ async def ticket(
     description: str,
 ):
     try:
-        emoji_map = {"it": "wrench", "hr": "person", "bug": "bug", "feature": "bulb", "general": "clipboard"}
-        emoji = {"it": "\U0001f527", "hr": "\U0001f464", "bug": "\U0001f41b", "feature": "\U0001f4a1", "general": "\U0001f4cb"}.get(category, "\U0001f4cb")
-        tid = f"T-{datetime.utcnow().strftime('%y%m%d%H%M')}"
+        emoji = {
+            "peptides": "\U0001f9ea",
+            "supps": "\U0001f48a",
+            "labs": "\U0001fa78",
+            "safety": "\u26a0\ufe0f",
+            "general": "\U0001f4cb",
+        }.get(category, "\U0001f4cb")
+        tid = f"Q-{datetime.utcnow().strftime('%y%m%d%H%M')}"
 
         embed = branded_embed(
             title=f"{emoji} [{tid}] {title}",
             description=description,
             color=BRAND_WARN,
         )
-        embed.add_field(name="Category", value=category.upper(), inline=True)
+        embed.add_field(name="Topic", value=category.upper(), inline=True)
         embed.add_field(name="Status", value="Open", inline=True)
-        embed.add_field(name="Submitted by", value=interaction.user.mention, inline=True)
+        embed.add_field(name="Asked by", value=interaction.user.mention, inline=True)
 
         await interaction.response.send_message(embed=embed)
         msg = await interaction.original_response()
@@ -269,7 +311,7 @@ async def ticket(
     except Exception:
         logger.exception("Error creating ticket")
         if not interaction.response.is_done():
-            await interaction.response.send_message("Something went wrong creating the ticket.", ephemeral=True)
+            await interaction.response.send_message("Something went wrong.", ephemeral=True)
 
 
 # ---- /poll ---------------------------------------------------------
@@ -309,92 +351,98 @@ async def poll(
     except Exception:
         logger.exception("Error creating poll")
         if not interaction.response.is_done():
-            await interaction.response.send_message("Something went wrong creating the poll.", ephemeral=True)
+            await interaction.response.send_message("Something went wrong.", ephemeral=True)
 
 
-# ---- /meeting ------------------------------------------------------
+# ---- /log ----------------------------------------------------------
 
-@bot.tree.command(name="meeting", description="Start a meeting notes thread")
+@bot.tree.command(name="log", description="Log a peptide or supplement protocol")
 @app_commands.describe(
-    title="Meeting title",
-    attendees="Tag attendees",
-    agenda="Agenda items",
+    compound="What compound/peptide (e.g. BPC-157, Semaglutide)",
+    dose="Dose and frequency (e.g. 250mcg 2x/day subQ)",
+    duration="How long you've been running it",
+    notes="Any notes, sides, or results",
 )
-async def meeting(
+async def log_protocol(
     interaction: discord.Interaction,
-    title: str,
-    attendees: str = "Everyone",
-    agenda: str = "Open discussion",
+    compound: str,
+    dose: str,
+    duration: str = "Just started",
+    notes: str = "No notes yet",
 ):
     try:
-        now = datetime.utcnow()
         embed = branded_embed(
-            title=f"Meeting: {title}",
-            color=BRAND_MEETING,
+            title=f"Protocol Log: {compound}",
+            color=BRAND_PEPTIDE,
+            author=interaction.user,
         )
-        embed.add_field(name="Date", value=now.strftime("%B %d, %Y"), inline=True)
-        embed.add_field(name="Attendees", value=attendees, inline=True)
-        embed.add_field(name="Agenda", value=agenda, inline=False)
+        embed.add_field(name="Compound", value=compound, inline=True)
+        embed.add_field(name="Dose", value=dose, inline=True)
+        embed.add_field(name="Duration", value=duration, inline=True)
+        embed.add_field(name="Notes", value=notes, inline=False)
         embed.add_field(
-            name="Template",
-            value="**Decisions Made:**\n**Action Items:**\n**Follow-ups:**",
+            name="Update template",
+            value="Reply in the thread with updates as your cycle progresses.",
             inline=False,
         )
 
         await interaction.response.send_message(embed=embed)
         msg = await interaction.original_response()
         await msg.create_thread(
-            name=f"Notes \u2014 {title} ({now.strftime('%m/%d')})",
+            name=f"{interaction.user.display_name} \u2014 {compound}",
             auto_archive_duration=10080,
         )
     except Exception:
-        logger.exception("Error creating meeting")
+        logger.exception("Error creating protocol log")
         if not interaction.response.is_done():
-            await interaction.response.send_message("Something went wrong creating the meeting.", ephemeral=True)
+            await interaction.response.send_message("Something went wrong.", ephemeral=True)
 
 
-# ---- /department ---------------------------------------------------
+# ---- /interest -----------------------------------------------------
 
-@bot.tree.command(name="department", description="Set your department role")
-@app_commands.describe(dept="Choose your department")
-@app_commands.choices(dept=[
-    app_commands.Choice(name="Engineering", value="Engineering"),
-    app_commands.Choice(name="Design", value="Design"),
-    app_commands.Choice(name="Marketing", value="Marketing"),
-    app_commands.Choice(name="Sales", value="Sales"),
-    app_commands.Choice(name="Operations", value="Operations"),
+@bot.tree.command(name="interest", description="Set your interest-area role")
+@app_commands.describe(area="Choose your main interest")
+@app_commands.choices(area=[
+    app_commands.Choice(name="Peptides", value="Peptides"),
+    app_commands.Choice(name="Longevity", value="Longevity"),
+    app_commands.Choice(name="Nootropics", value="Nootropics"),
+    app_commands.Choice(name="Fitness & Recovery", value="Fitness & Recovery"),
+    app_commands.Choice(name="Hormone Optimization", value="Hormone Optimization"),
 ])
-async def department(interaction: discord.Interaction, dept: str):
+async def interest(interaction: discord.Interaction, area: str):
     try:
-        dept_roles = ["Engineering", "Design", "Marketing", "Sales", "Operations"]
+        interest_roles = [
+            "Peptides", "Longevity", "Nootropics",
+            "Fitness & Recovery", "Hormone Optimization",
+        ]
 
-        # Remove any existing department role
+        # Remove any existing interest role
         for r in interaction.user.roles:
-            if r.name in dept_roles:
+            if r.name in interest_roles:
                 await interaction.user.remove_roles(r)
 
-        # Assign selected department role (create if missing)
-        role = discord.utils.get(interaction.guild.roles, name=dept)
+        # Assign selected interest role (create if missing)
+        role = discord.utils.get(interaction.guild.roles, name=area)
         if not role:
-            role = await interaction.guild.create_role(name=dept, mentionable=True)
+            role = await interaction.guild.create_role(name=area, mentionable=True)
         await interaction.user.add_roles(role)
 
         await interaction.response.send_message(
-            f"You're now in **{dept}**!", ephemeral=True
+            f"You're tagged as **{area}**!", ephemeral=True
         )
     except Exception:
-        logger.exception("Error setting department")
+        logger.exception("Error setting interest role")
         if not interaction.response.is_done():
-            await interaction.response.send_message("Something went wrong setting your department.", ephemeral=True)
+            await interaction.response.send_message("Something went wrong.", ephemeral=True)
 
 
 # ---- /announce -----------------------------------------------------
 
-@bot.tree.command(name="announce", description="Post an announcement (Manager+)")
+@bot.tree.command(name="announce", description="Post an announcement (Moderator+)")
 @app_commands.describe(title="Title", message="Body")
 async def announce(interaction: discord.Interaction, title: str, message: str):
-    if not any(r.name in ["Admin", "Manager"] for r in interaction.user.roles):
-        await interaction.response.send_message("Manager+ only.", ephemeral=True)
+    if not any(r.name in ["Admin", "Moderator"] for r in interaction.user.roles):
+        await interaction.response.send_message("Moderator+ only.", ephemeral=True)
         return
 
     ch = get_channel("announcements")
@@ -414,7 +462,7 @@ async def announce(interaction: discord.Interaction, title: str, message: str):
     except Exception:
         logger.exception("Error posting announcement")
         if not interaction.response.is_done():
-            await interaction.response.send_message("Something went wrong posting the announcement.", ephemeral=True)
+            await interaction.response.send_message("Something went wrong.", ephemeral=True)
 
 
 # ---- /setup_server -------------------------------------------------
@@ -501,38 +549,36 @@ async def setup_server(interaction: discord.Interaction):
         for cd in cat.get("channels", []):
             if cd["name"] not in existing_ch:
                 if cd.get("type") == "voice":
-                    new_ch = await guild.create_voice_channel(
+                    await guild.create_voice_channel(
                         cd["name"],
                         category=category,
                         user_limit=cd.get("user_limit", 0),
                     )
                 else:
-                    new_ch = await guild.create_text_channel(
+                    await guild.create_text_channel(
                         cd["name"],
                         category=category,
                         topic=cd.get("topic", ""),
                     )
                 status.append(f"  + #{cd['name']}")
             else:
-                new_ch = existing_ch[cd["name"]]
                 status.append(f"  = #{cd['name']}")
 
-        # Make #announcements read-only for Team Member / Contractor
+        # Make #announcements read-only for Members
         if cat["name"] == "\u2501\u2501 WELCOME \u2501\u2501":
             ann_ch = discord.utils.get(guild.text_channels, name="announcements")
             if ann_ch:
-                for viewer_role_name in ["Team Member", "Contractor"]:
-                    viewer_role = role_objects.get(viewer_role_name) or discord.utils.get(
-                        guild.roles, name=viewer_role_name
+                member_role = role_objects.get("Member") or discord.utils.get(
+                    guild.roles, name="Member"
+                )
+                if member_role:
+                    await ann_ch.set_permissions(
+                        member_role,
+                        view_channel=True,
+                        send_messages=False,
+                        add_reactions=True,
+                        read_message_history=True,
                     )
-                    if viewer_role:
-                        await ann_ch.set_permissions(
-                            viewer_role,
-                            view_channel=True,
-                            send_messages=False,
-                            add_reactions=True,
-                            read_message_history=True,
-                        )
                 status.append("  Announcements: read-only for members")
 
     logger.info("Server setup completed")

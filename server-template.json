@@ -1,1 +1,255 @@
-{"name":"Business Team Server","roles":[{"name":"Admin","color":"#E74C3C","permissions":["ADMINISTRATOR"],"hoist":true,"mentionable":false},{"name":"Manager","color":"#E67E22","permissions":["MANAGE_CHANNELS","MANAGE_MESSAGES","MANAGE_ROLES","KICK_MEMBERS","MUTE_MEMBERS","DEAFEN_MEMBERS","MOVE_MEMBERS","MANAGE_NICKNAMES","VIEW_AUDIT_LOG","MENTION_EVERYONE","MANAGE_THREADS"],"hoist":true,"mentionable":true},{"name":"Team Lead","color":"#3498DB","permissions":["MANAGE_MESSAGES","MENTION_EVERYONE","MANAGE_THREADS","MUTE_MEMBERS","MOVE_MEMBERS"],"hoist":true,"mentionable":true},{"name":"Team Member","color":"#2ECC71","permissions":["SEND_MESSAGES","READ_MESSAGE_HISTORY","ADD_REACTIONS","ATTACH_FILES","EMBED_LINKS","CONNECT","SPEAK","STREAM"],"hoist":true,"mentionable":true},{"name":"Contractor","color":"#9B59B6","permissions":["SEND_MESSAGES","READ_MESSAGE_HISTORY","ADD_REACTIONS","ATTACH_FILES","CONNECT","SPEAK"],"hoist":false,"mentionable":true},{"name":"Bot","color":"#95A5A6","permissions":["SEND_MESSAGES","MANAGE_MESSAGES","EMBED_LINKS","READ_MESSAGE_HISTORY","ADD_REACTIONS","MANAGE_THREADS"],"hoist":false,"mentionable":false}],"categories":[{"name":"━━ WELCOME ━━","channels":[{"name":"welcome","type":"text","topic":"Welcome to the team!"},{"name":"rules-and-guidelines","type":"text","topic":"Server rules and expectations"},{"name":"introductions","type":"text","topic":"Introduce yourself"},{"name":"announcements","type":"text","topic":"Company announcements"}]},{"name":"━━ GENERAL ━━","channels":[{"name":"general","type":"text","topic":"General discussion"},{"name":"random","type":"text","topic":"Off-topic chat"},{"name":"wins-and-shoutouts","type":"text","topic":"Celebrate wins"}]},{"name":"━━ PROJECTS ━━","channels":[{"name":"project-updates","type":"text","topic":"Status updates"},{"name":"project-alpha","type":"text"},{"name":"project-beta","type":"text"},{"name":"backlog-and-ideas","type":"text","topic":"Feature requests and ideas"}]},{"name":"━━ DEPARTMENTS ━━","channels":[{"name":"engineering","type":"text"},{"name":"design","type":"text"},{"name":"marketing","type":"text"},{"name":"sales","type":"text"},{"name":"operations","type":"text"}]},{"name":"━━ MANAGEMENT ━━","restricted_to":["Admin","Manager"],"channels":[{"name":"leadership","type":"text"},{"name":"hiring","type":"text"},{"name":"finances","type":"text"},{"name":"hr-and-policies","type":"text"}]},{"name":"━━ STANDUPS & MEETINGS ━━","channels":[{"name":"daily-standup","type":"text","topic":"Yesterday / Today / Blockers"},{"name":"meeting-notes","type":"text"},{"name":"scheduling","type":"text"}]},{"name":"━━ RESOURCES ━━","channels":[{"name":"docs-and-links","type":"text"},{"name":"tools-and-access","type":"text"},{"name":"learning","type":"text"}]},{"name":"━━ VOICE ━━","channels":[{"name":"Huddle Room","type":"voice"},{"name":"Team Meeting","type":"voice"},{"name":"1-on-1","type":"voice","user_limit":2},{"name":"Focus / Co-working","type":"voice"}]},{"name":"━━ BOT & LOGS ━━","restricted_to":["Admin","Manager","Bot"],"channels":[{"name":"bot-commands","type":"text"},{"name":"audit-log","type":"text"},{"name":"welcome-log","type":"text"}]}]}
+{
+  "name": "Biohacking & Health Community",
+  "roles": [
+    {
+      "name": "Admin",
+      "color": "#E74C3C",
+      "permissions": ["ADMINISTRATOR"],
+      "hoist": true,
+      "mentionable": false
+    },
+    {
+      "name": "Moderator",
+      "color": "#E67E22",
+      "permissions": [
+        "MANAGE_CHANNELS",
+        "MANAGE_MESSAGES",
+        "MANAGE_ROLES",
+        "KICK_MEMBERS",
+        "MUTE_MEMBERS",
+        "DEAFEN_MEMBERS",
+        "MOVE_MEMBERS",
+        "MANAGE_NICKNAMES",
+        "VIEW_AUDIT_LOG",
+        "MENTION_EVERYONE",
+        "MANAGE_THREADS"
+      ],
+      "hoist": true,
+      "mentionable": true
+    },
+    {
+      "name": "Veteran Biohacker",
+      "color": "#3498DB",
+      "permissions": [
+        "MANAGE_MESSAGES",
+        "MENTION_EVERYONE",
+        "MANAGE_THREADS",
+        "MUTE_MEMBERS",
+        "MOVE_MEMBERS"
+      ],
+      "hoist": true,
+      "mentionable": true
+    },
+    {
+      "name": "Member",
+      "color": "#2ECC71",
+      "permissions": [
+        "SEND_MESSAGES",
+        "READ_MESSAGE_HISTORY",
+        "ADD_REACTIONS",
+        "ATTACH_FILES",
+        "EMBED_LINKS",
+        "CONNECT",
+        "SPEAK",
+        "STREAM"
+      ],
+      "hoist": false,
+      "mentionable": true
+    },
+    {
+      "name": "Bot",
+      "color": "#95A5A6",
+      "permissions": [
+        "SEND_MESSAGES",
+        "MANAGE_MESSAGES",
+        "EMBED_LINKS",
+        "READ_MESSAGE_HISTORY",
+        "ADD_REACTIONS",
+        "MANAGE_THREADS"
+      ],
+      "hoist": false,
+      "mentionable": false
+    }
+  ],
+  "categories": [
+    {
+      "name": "\u2501\u2501 WELCOME \u2501\u2501",
+      "channels": [
+        {
+          "name": "welcome",
+          "type": "text",
+          "topic": "Welcome to the Biohacking & Health community!"
+        },
+        {
+          "name": "rules",
+          "type": "text",
+          "topic": "Community rules \u2014 read before posting"
+        },
+        {
+          "name": "introductions",
+          "type": "text",
+          "topic": "Introduce yourself and share your biohacking journey"
+        },
+        {
+          "name": "announcements",
+          "type": "text",
+          "topic": "Community announcements, product drops, and news"
+        }
+      ]
+    },
+    {
+      "name": "\u2501\u2501 GENERAL \u2501\u2501",
+      "channels": [
+        {
+          "name": "general-chat",
+          "type": "text",
+          "topic": "General biohacking discussion"
+        },
+        {
+          "name": "wins-and-progress",
+          "type": "text",
+          "topic": "Share your results, bloodwork improvements, and progress pics"
+        },
+        {
+          "name": "memes-and-offtopic",
+          "type": "text",
+          "topic": "Off-topic and memes"
+        }
+      ]
+    },
+    {
+      "name": "\u2501\u2501 PEPTIDES \u2501\u2501",
+      "channels": [
+        {
+          "name": "peptide-general",
+          "type": "text",
+          "topic": "General peptide discussion \u2014 bestpeptides.club | peptidewars.com"
+        },
+        {
+          "name": "peptide-logs",
+          "type": "text",
+          "topic": "Share your peptide cycles, dosing protocols, and results"
+        },
+        {
+          "name": "bpc-157-tb500",
+          "type": "text",
+          "topic": "BPC-157, TB-500, and healing peptides"
+        },
+        {
+          "name": "gh-secretagogues",
+          "type": "text",
+          "topic": "CJC-1295, Ipamorelin, MK-677, Tesamorelin, and GH peptides"
+        },
+        {
+          "name": "fat-loss-peptides",
+          "type": "text",
+          "topic": "Semaglutide, Tirzepatide, AOD-9604, and fat loss compounds"
+        },
+        {
+          "name": "sourcing-and-testing",
+          "type": "text",
+          "topic": "Vendor discussion, COAs, and third-party testing"
+        }
+      ]
+    },
+    {
+      "name": "\u2501\u2501 HEALTH & OPTIMIZATION \u2501\u2501",
+      "channels": [
+        {
+          "name": "bloodwork-and-labs",
+          "type": "text",
+          "topic": "Lab results, panels, and biomarker discussion"
+        },
+        {
+          "name": "supplements-and-nootropics",
+          "type": "text",
+          "topic": "Supplements, nootropics, and stacks"
+        },
+        {
+          "name": "nutrition-and-diet",
+          "type": "text",
+          "topic": "Diet protocols, meal plans, and nutrition science"
+        },
+        {
+          "name": "training-and-recovery",
+          "type": "text",
+          "topic": "Lifting, cardio, sleep, sauna, cold plunge, and recovery"
+        },
+        {
+          "name": "longevity",
+          "type": "text",
+          "topic": "Anti-aging, rapamycin, NAD+, telomeres, and longevity research"
+        },
+        {
+          "name": "hormone-optimization",
+          "type": "text",
+          "topic": "TRT, HRT, thyroid, and hormone protocols"
+        }
+      ]
+    },
+    {
+      "name": "\u2501\u2501 RESOURCES \u2501\u2501",
+      "channels": [
+        {
+          "name": "research-and-studies",
+          "type": "text",
+          "topic": "PubMed links, clinical studies, and research papers"
+        },
+        {
+          "name": "guides-and-wikis",
+          "type": "text",
+          "topic": "Pinned guides, beginner resources, and FAQs"
+        },
+        {
+          "name": "deals-and-discounts",
+          "type": "text",
+          "topic": "Coupon codes, sales, and deals \u2014 bestpeptides.club | peptidewars.com"
+        }
+      ]
+    },
+    {
+      "name": "\u2501\u2501 VOICE \u2501\u2501",
+      "channels": [
+        {
+          "name": "Lounge",
+          "type": "voice"
+        },
+        {
+          "name": "Q&A Session",
+          "type": "voice"
+        },
+        {
+          "name": "1-on-1",
+          "type": "voice",
+          "user_limit": 2
+        }
+      ]
+    },
+    {
+      "name": "\u2501\u2501 ADMIN \u2501\u2501",
+      "restricted_to": ["Admin", "Moderator", "Bot"],
+      "channels": [
+        {
+          "name": "mod-chat",
+          "type": "text",
+          "topic": "Moderator discussion"
+        },
+        {
+          "name": "bot-commands",
+          "type": "text",
+          "topic": "Bot testing and commands"
+        },
+        {
+          "name": "audit-log",
+          "type": "text",
+          "topic": "Member join/leave log"
+        },
+        {
+          "name": "welcome-log",
+          "type": "text",
+          "topic": "Welcome event log"
+        }
+      ]
+    }
+  ]
+}
