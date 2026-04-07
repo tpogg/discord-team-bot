@@ -16,6 +16,7 @@ logging.basicConfig(
     datefmt="%Y-%m-%d %H:%M:%S",
 )
 logger = logging.getLogger("biohack-bot")
+BOT_VERSION = "2.0.0-biohack"
 
 # ---------------------------------------------------------------------------
 # Configuration
@@ -92,7 +93,7 @@ def branded_embed(
 
 @bot.event
 async def on_ready():
-    logger.info(f"{bot.user} is online")
+    logger.info(f"{bot.user} is online | version {BOT_VERSION}")
     guild = bot.get_guild(GUILD_ID)
     if guild is None:
         logger.warning(f"Guild {GUILD_ID} not found")
@@ -206,6 +207,15 @@ async def daily_checkin():
 # ===================================================================
 # Slash commands
 # ===================================================================
+
+# ---- /version -----------------------------------------------------
+
+@bot.tree.command(name="version", description="Check which version of the bot is running")
+async def version(interaction: discord.Interaction):
+    await interaction.response.send_message(
+        f"Running **{BOT_VERSION}**", ephemeral=True
+    )
+
 
 # ---- /help --------------------------------------------------------
 
