@@ -469,9 +469,15 @@ async def announce(interaction: discord.Interaction, title: str, message: str):
 
 @bot.tree.command(
     name="setup_server",
-    description="Auto-create channels, roles & permissions from template (Admin only)",
+    description="Wipe old channels/roles and rebuild server from template (Admin only)",
 )
-async def setup_server(interaction: discord.Interaction):
+@app_commands.describe(
+    clean="Delete channels and roles not in the template? (default: True)",
+)
+async def setup_server(
+    interaction: discord.Interaction,
+    clean: bool = True,
+):
     if not interaction.user.guild_permissions.administrator:
         await interaction.response.send_message("Admin only.", ephemeral=True)
         return
@@ -490,7 +496,46 @@ async def setup_server(interaction: discord.Interaction):
 
     status: list[str] = []
 
-    # ------ Roles ------
+    # Build sets of names the template expects
+    template_role_names = {rd["name"] for rd in template["roles"]}
+    template_category_names = {cat["name"] for cat in template["categories"]}
+    template_channel_names: set[str] = set()
+    for cat in template["categories"]:
+        for cd in cat.get("channels", []):
+            template_channel_names.add(cd["name"])
+
+    # Roles that should never be touched
+    protected_roles = {"@everyone", "Server Booster"}
+
+    # ------ Clean phase: remove old stuff ------
+    if clean:
+        # Delete channels not in template (skip uncategorized channels)
+        for ch in list(guild.channels):
+            if ch.name not in template_channel_names and ch.name not in template_category_names:
+                # Skip the "general" default channel Discord won't let you delete
+                if isinstance(ch, discord.TextChannel) and ch.position == 0 and ch.category is None:
+                    continue
+                try:
+                    await ch.delete(reason="setup_server clean")
+                    status.append(f"- Deleted #{ch.name}")
+                except Exception:
+                    logger.warning(f"Could not delete channel {ch.name}")
+
+        # Delete roles not in template
+        for r in list(guild.roles):
+            if r.name in protected_roles or r.is_default() or r.managed:
+                continue
+            if r.name not in template_role_names:
+                try:
+                    await r.delete(reason="setup_server clean")
+                    status.append(f"- Deleted role: {r.name}")
+                except Exception:
+                    logger.warning(f"Could not delete role {r.name}")
+
+        # Small delay to let Discord catch up
+        await asyncio.sleep(1)
+
+    # ------ Create roles ------
     existing_roles = {r.name: r for r in guild.roles}
     role_objects: dict[str, discord.Role] = {}
 
@@ -508,7 +553,7 @@ async def setup_server(interaction: discord.Interaction):
             role_objects[rd["name"]] = existing_roles[rd["name"]]
             status.append(f"= Role: {rd['name']}")
 
-    # ------ Channels & permissions ------
+    # ------ Create channels & set permissions ------
     existing_ch = {c.name: c for c in guild.channels}
 
     for cat in template["categories"]:
@@ -546,8 +591,10 @@ async def setup_server(interaction: discord.Interaction):
                 logger.exception(f"Failed to set overwrites on {cat['name']}")
 
         # Create channels inside the category
+        # Re-check existing channels after clean phase
+        current_ch = {c.name for c in guild.channels}
         for cd in cat.get("channels", []):
-            if cd["name"] not in existing_ch:
+            if cd["name"] not in current_ch:
                 if cd.get("type") == "voice":
                     await guild.create_voice_channel(
                         cd["name"],
@@ -583,7 +630,7 @@ async def setup_server(interaction: discord.Interaction):
 
     logger.info("Server setup completed")
     await interaction.followup.send(
-        f"**Setup Complete:**\n```\n{chr(10).join(status[:50])}\n```"
+        f"**Setup Complete:**\n```\n{chr(10).join(status[:60])}\n```"
     )
 
 
