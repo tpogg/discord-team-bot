@@ -94,9 +94,24 @@ def branded_embed(
 @bot.event
 async def on_ready():
     logger.info(f"{bot.user} is online | version {BOT_VERSION}")
+    logger.info(f"GUILD_ID={GUILD_ID}")
+
     guild = bot.get_guild(GUILD_ID)
+
+    # Sync slash commands — guild-specific if possible, global as fallback
+    try:
+        if guild:
+            bot.tree.copy_global_to(guild=discord.Object(id=GUILD_ID))
+            await bot.tree.sync(guild=discord.Object(id=GUILD_ID))
+            logger.info("Slash commands synced to guild")
+        else:
+            logger.warning(f"Guild {GUILD_ID} not found — syncing commands globally")
+            await bot.tree.sync()
+            logger.info("Slash commands synced globally (may take up to 1 hour)")
+    except Exception:
+        logger.exception("Failed to sync slash commands")
+
     if guild is None:
-        logger.warning(f"Guild {GUILD_ID} not found")
         return
 
     # Cache well-known channels
@@ -107,14 +122,6 @@ async def on_ready():
             logger.info(f"  Cached {key} -> #{name}")
         else:
             logger.warning(f"  Channel #{name} not found for key '{key}'")
-
-    # Sync slash commands to the guild
-    try:
-        bot.tree.copy_global_to(guild=discord.Object(id=GUILD_ID))
-        await bot.tree.sync(guild=discord.Object(id=GUILD_ID))
-        logger.info("Slash commands synced")
-    except Exception:
-        logger.exception("Failed to sync slash commands")
 
     # Start daily check-in loop
     if not daily_checkin.is_running():
